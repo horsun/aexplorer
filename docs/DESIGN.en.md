@@ -400,11 +400,10 @@ installplg /boot/config/plugins/aexplorer/aexplorer.plg
 # or plugin install /boot/config/plugins/aexplorer/aexplorer.plg (when 7.3.x lacks installplg)
 ```
 
-**URL install (repo public + txz committed)**: on the Plugins page, enter the following in "Install Plugin":
+**URL install (since 0.8.4, repo public + txz committed)**: on the Plugins page, enter the following in "Install Plugin":
 ```
-https://raw.githubusercontent.com/horsun/aexplorer/1.0/plugin/aexplorer.plg
+http://10.10.10.6:8300/bot/aexplorer/raw/branch/main/plugin/aexplorer.plg
 ```
-> Gitea dev-repo install source (LAN): `http://10.10.10.6:8300/bot/aexplorer/raw/branch/main/plugin/aexplorer.plg`
 A different version takes the upgrade path (no same-version rejection). Upgrade flow (verified): pre-download plg+txz → SHA256 compare → `plugin install` → verify in the browser.
 
 **Reinstall gotchas** (pitfalls hit on real hardware at 0.7.0):
@@ -505,4 +504,4 @@ A different version takes the upgrade path (no same-version rejection). Upgrade 
 
 ---
 
-**Status: v1.0 · 2026-08-08**
+**Status: v0.8.8-dev · 2026-08-08**

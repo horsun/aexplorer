@@ -390,11 +390,10 @@ installplg /boot/config/plugins/aexplorer/aexplorer.plg
 # 或 plugin install /boot/config/plugins/aexplorer/aexplorer.plg（7.3.x 无 installplg 时）
 ```
 
-**URL 安装（仓库公开 + txz 已提交）**：插件页「安装插件」输入
+**URL 安装（0.8.4 起，仓库公开 + txz 已提交）**：插件页「安装插件」输入
 ```
-https://raw.githubusercontent.com/horsun/aexplorer/1.0/plugin/aexplorer.plg
+http://10.10.10.6:8300/bot/aexplorer/raw/branch/main/plugin/aexplorer.plg
 ```
-> Gitea 开发仓库安装源（内网）：`http://10.10.10.6:8300/bot/aexplorer/raw/branch/main/plugin/aexplorer.plg`
 版本不同走升级路径（不撞同版本拒绝）。升级流程（已验证）：预下载 plg+txz → SHA256 比对 → `plugin install` → 浏览器验证。
 
 **重装注意事项**（0.7.0 实测踩坑）：
@@ -496,4 +495,4 @@ https://raw.githubusercontent.com/horsun/aexplorer/1.0/plugin/aexplorer.plg
 
 ---
 
-**状态：v1.0 · 2026-08-08**
+**状态：v0.8.8-dev · 2026-08-08**

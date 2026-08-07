@@ -2,7 +2,7 @@
 <!--
   AExplorer 本地安装版 plg（不联网，不使用 Gitea release）
   使用方式：
-  1) 将 aexplorer-1.0.txz 放到 /boot/config/plugins/aexplorer/
+  1) 将 aexplorer-0.6.3.txz 放到 /boot/config/plugins/aexplorer/
   2) 将本文件放到 /boot/config/plugins/aexplorer/aexplorer.plg
   3) 执行：plugin install /boot/config/plugins/aexplorer/aexplorer.plg
      或：installplg /boot/config/plugins/aexplorer/aexplorer.plg
@@ -14,17 +14,14 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name       "aexplorer">
 <!ENTITY launch     "AExplorer">
-<!ENTITY author     "bo-fn">
-<!ENTITY version    "1.0">
+<!ENTITY author     "horsun">
+<!ENTITY version    "0.6.3">
 <!ENTITY file       "&name;-&version;.txz">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" icon="aexplorer.png" min="7.0.0">
 
 <CHANGES>
-### 1.0 (2026-08-08)
-- GitHub 线上里程碑版（对应 Gitea 开发仓库 0.8.x 快照）：扩展查看器 + 内嵌终端 + 首字母选中 + 文件夹打包下载 + i18n 双语 + 日志系统
-
 ### 0.6.3 (2026-08-05)
 - 文档全面更新：README / docs/DESIGN / 插件 README（显示名描述）对齐 0.6.2 全功能（顶部 tab、媒体打开、侧键、星标、递归搜索、属性、编码切换等），清除过期内容
 
@@ -88,7 +85,7 @@ rm -f $(ls /boot/config/plugins/&name;/&name;*.txz 2>/dev/null|grep -v '&version
 
 <!-- 本地安装：txz 必须已放置在 Name 指定路径（plugin 脚本存在即校验 SHA256 后直接安装） -->
 <FILE Name="/boot/config/plugins/&name;/&file;" Run="upgradepkg --install-new">
-<SHA256>718f24b500907948bfa5e636ef24d9c0de0db2a9232519153d5e9115f1b1e2f6</SHA256>
+<SHA256>fd21885a32132b8c5ea39b44c824c0d24681a4f584e09f09d953acd4d6659fdc</SHA256>
 </FILE>
 
 <FILE Run="/bin/bash">

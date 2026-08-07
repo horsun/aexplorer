@@ -2,8 +2,8 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name       "aexplorer">
 <!ENTITY launch     "AExplorer">
-<!ENTITY author     "bo-fn">
-<!ENTITY version    "1.0">
+<!ENTITY author     "horsun">
+<!ENTITY version    "0.8.7">
 <!ENTITY branch     "main">
 <!ENTITY file       "&name;-&version;.txz">
 <!ENTITY github     "horsun/&name;">
@@ -217,7 +217,7 @@ rm -f $(ls /boot/config/plugins/&name;/&name;*.txz 2>/dev/null|grep -v '&version
 
 <FILE Name="/boot/config/plugins/&name;/&file;" Run="upgradepkg --install-new">
 <URL>&releaseURL;/&file;</URL>
-<SHA256>718f24b500907948bfa5e636ef24d9c0de0db2a9232519153d5e9115f1b1e2f6</SHA256>
+<SHA256>b8e697c374f1ea24bf78fc73fd43a9958ee7ea801b51688bfe234c35fd653fc0</SHA256>
 </FILE>
 
 <FILE Run="/bin/bash">

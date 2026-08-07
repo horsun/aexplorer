@@ -5,7 +5,7 @@
 set -euo pipefail
 
 NAME="aexplorer"
-VERSION="1.0"
+VERSION="0.8.7"
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 PKG="$ROOT/package"
 TXZ="$ROOT/plugin/${NAME}-${VERSION}.txz"

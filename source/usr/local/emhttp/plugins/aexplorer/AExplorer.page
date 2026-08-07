@@ -1,0 +1,199 @@
+Title="AExplorer"
+Icon="aexplorer.png"
+Type="xmenu"
+Menu="Tasks:70"
+Nchan="file_manager"
+---
+<?PHP
+/* AExplorer — 基于 Unraid 7 内置 Dynamix File Manager 改造
+ * Copyright 2005-2025, Lime Technology
+ * Copyright 2012-2025, Bergware International.
+ * GPL v2
+ */
+?>
+<?
+function ex_validdir($dir) {
+  $path = realpath($dir);
+  return in_array(explode('/',$path)[1]??'',['mnt','boot']) ? $path : '';
+}
+$docroot = $docroot ?: $_SERVER['DOCUMENT_ROOT'] ?: '/usr/local/emhttp';
+$dir = ex_validdir(htmlspecialchars_decode(rawurldecode($_GET['dir']??'/mnt')));
+if (!$dir) $dir = '/mnt';
+$dir = htmlspecialchars(str_replace('\\','\\\\',$dir));
+// CSRF token（系统 Control.php 上传/操作需要）
+$csrf = $var['csrf_token'] ?? ($_SESSION['csrf_token'] ?? '');
+?>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="csrf-token" content="<?= htmlspecialchars($csrf); ?>">
+<?php
+// 用户列表（owner 下拉数据源：/etc/passwd UID>=1000 + root + nobody，只读）
+$ae_users = ['nobody', 'root'];
+$ae_pw = @file('/etc/passwd');
+if ($ae_pw) {
+  foreach ($ae_pw as $ae_l) {
+    $ae_f = explode(':', trim($ae_l));
+    if (count($ae_f) >= 3 && (int)$ae_f[2] >= 1000 && !in_array($ae_f[0], $ae_users)) $ae_users[] = $ae_f[0];
+  }
+}
+?>
+<script>window.AE_USERS = <?= json_encode($ae_users, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG); ?>;</script>
+<script>window.AE_LOCALE = <?= json_encode((($_SESSION['locale'] ?? '') === 'zh_CN') ? 'zh' : 'en'); ?>;</script>
+<link type="text/css" rel="stylesheet" href="<?autov("/plugins/aexplorer/css/explorer.css")?>">
+<style>
+/* 作用域限定到插件容器，不污染官方 WebGUI 全局样式 */
+#explorer-app { background: var(--bg); }
+</style>
+
+<div id="explorer-app" data-dir="<?=$dir?>" data-root="/plugins/aexplorer">
+
+  <!-- 导航栏 -->
+  <header class="ex-navbar">
+    <button class="ex-icon-btn ex-menu-btn" id="btn-menu" data-i18n-title="目录" title="目录">☰</button>
+    <div class="ex-nav-actions">
+      <button class="ex-icon-btn" id="btn-back" data-i18n-title="后退 (Alt+←)" title="后退 (Alt+←)">←</button>
+      <button class="ex-icon-btn" id="btn-forward" data-i18n-title="前进 (Alt+→)" title="前进 (Alt+→)">→</button>
+      <button class="ex-icon-btn" id="btn-up" data-i18n-title="上级目录 (Backspace)" title="上级目录 (Backspace)">↑</button>
+      <button class="ex-icon-btn" id="btn-fullscreen" data-i18n-title="全屏" title="全屏">⛶</button>
+    </div>
+    <div class="ex-address" id="address-bar" data-i18n-title="输入路径回车直达" title="输入路径回车直达">
+      <span class="ex-crumb" id="breadcrumbs"></span>
+      <input type="text" id="address-input" data-i18n="输入路径，如 /mnt/user/downloads" placeholder="输入路径，如 /mnt/user/downloads">
+    </div>
+    <div class="ex-search">
+      <input type="text" id="search-input" data-i18n="搜索… (Ctrl+F)" placeholder="搜索… (Ctrl+F)">
+      <span class="ex-search-clear" id="search-clear">✕</span>
+    </div>
+    <div class="ex-view-toggle">
+      <button class="ex-icon-btn active" data-view="list" data-i18n-title="列表 (Ctrl+1)" title="列表 (Ctrl+1)">≡</button>
+      <button class="ex-icon-btn" data-view="grid" data-i18n-title="大图标 (Ctrl+2)" title="大图标 (Ctrl+2)">▦</button>
+          </div>
+  </header>
+
+  <!-- 工具栏（对接官方 FileManager 动作） -->
+  <div class="ex-toolbar" id="toolbar">
+    <button class="ex-tool" id="tool-create" data-i18n="📁 新建">📁 新建</button>
+    <button class="ex-tool" id="tool-upload" data-i18n="⬆ 上传">⬆ 上传</button>
+    <button class="ex-tool" id="tool-download" data-i18n="⬇ 下载" disabled>⬇ 下载</button>
+    <span class="ex-tool-sep"></span>
+    <button class="ex-tool" id="tool-copy" data-i18n="⧉ 复制" disabled>⧉ 复制</button>
+    <button class="ex-tool" id="tool-move" data-i18n="➡ 移动" disabled>➡ 移动</button>
+    <button class="ex-tool" id="tool-rename" data-i18n="✏ 重命名" disabled>✏ 重命名</button>
+    <span class="ex-tool-sep"></span>
+    <button class="ex-tool" id="tool-owner" data-i18n="👤 属主" disabled>👤 属主</button>
+    <button class="ex-tool" id="tool-perm" data-i18n="🔒 权限" disabled>🔒 权限</button>
+    <button class="ex-tool" id="tool-calc" data-i18n="ℹ️ 属性" disabled>ℹ️ 属性</button>
+    <button class="ex-tool danger" id="tool-delete" data-i18n="🗑 删除" disabled>🗑 删除</button>
+    <span class="ex-tool-sep"></span>
+    <button class="ex-tool" id="tool-search" data-i18n="🔍 搜索">🔍 搜索</button>
+    <button class="ex-tool" id="tool-refresh" data-i18n="⟳ 刷新">⟳ 刷新</button>
+    <button class="ex-tool" id="tool-sort" data-i18n-title="切换排序" title="切换排序">名称↓</button>
+    <button class="ex-tool ex-more-btn" id="tool-more" data-i18n="更多操作" title="更多操作">⋯</button>
+    <input type="file" id="file-upload" multiple style="display:none">
+  </div>
+  <!-- 更多操作弹出（移动端工具栏折叠） -->
+  <div class="ex-more-menu" id="more-menu" style="display:none"></div>
+
+  <!-- 主区域 -->
+  <div class="ex-main">
+
+    <!-- 左侧目录树 -->
+    <aside class="ex-sidebar" id="sidebar">
+      <div class="ex-sidebar-section" id="star-section" style="display:none">
+        <div class="ex-sidebar-title" data-i18n="⭐ 星标">⭐ 星标</div>
+        <div id="star-tree" class="ex-tree"></div>
+      </div>
+      <div class="ex-sidebar-section">
+        <div class="ex-sidebar-title" data-i18n="⚡ 快捷">⚡ 快捷</div>
+        <div id="quick-tree" class="ex-tree"></div>
+      </div>
+      <div class="ex-sidebar-section ex-storage">
+        <div class="ex-sidebar-title" data-i18n="💾 存储">💾 存储</div>
+        <div id="storage-tree" class="ex-tree"></div>
+      </div>
+    </aside>
+
+    <!-- 文件列表区 -->
+    <section class="ex-content">
+      <div class="ex-list-header" id="list-header">
+        <span class="col-name" data-i18n="名称">名称 <span class="sort-ind"></span></span>
+        <span class="col-owner" data-i18n="属主">属主 <span class="sort-ind"></span></span>
+        <span class="col-perm" data-i18n="权限">权限 <span class="sort-ind"></span></span>
+        <span class="col-size" data-i18n="大小">大小 <span class="sort-ind"></span></span>
+        <span class="col-mtime" data-i18n="修改时间">修改时间 <span class="sort-ind"></span></span>
+        <span class="col-loc" data-i18n="位置">位置</span>
+      </div>
+      <div class="ex-list" id="file-list">
+        <div class="ex-empty" id="empty-hint" data-i18n="加载中…">加载中…</div>
+      </div>
+      <div class="ex-progress" id="progress-bar" style="display:none">
+        <div class="ex-progress-fill" id="progress-fill"></div>
+        <span id="progress-text">0%</span>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- 内嵌终端面板（右键空白处 → 在此打开终端） -->
+  <div class="ex-term-panel" id="term-panel" style="display:none">
+    <div class="ex-term-bar">
+      <span id="term-title">🖥 Terminal</span>
+      <span class="ex-spacer"></span>
+      <button class="ex-status-btn" id="term-close" data-i18n="✕ 关闭" title="关闭终端">✕ 关闭</button>
+    </div>
+    <iframe id="term-frame" style="width:100%;height:100%;border:none;background:#000;display:block;"></iframe>
+  </div>
+
+  <!-- 状态栏 -->
+  <footer class="ex-statusbar">
+    <span id="status-count">—</span>
+    <span id="status-selected">—</span>
+    <span class="ex-spacer"></span>
+    <span id="status-disk">—</span>
+    <button class="ex-status-btn" id="btn-applog" data-i18n="📋 日志" title="查看应用日志">📋 日志</button>
+    <button class="ex-status-btn" id="btn-opslog" data-i18n="🕒 操作记录" title="查看操作记录">🕒 操作记录</button>
+  </footer>
+
+  <!-- 右键菜单 -->
+  <div class="ex-contextmenu" id="context-menu"></div>
+
+  <!-- 模态框（复用官方对话框模板） -->
+  <div class="ex-modal-mask" id="modal-mask" style="display:none">
+    <div class="ex-modal" id="modal-box"></div>
+  </div>
+
+  <!-- ACE 编辑器容器（官方自带） -->
+  <div class="ex-editor-mask" id="editor-mask" style="display:none">
+    <div class="ex-editor">
+      <div class="ex-editor-toolbar">
+        <span id="editor-title" data-i18n="编辑器">编辑器</span>
+        <select class="ex-editor-enc" id="editor-encoding" data-i18n="查看编码（保存将转 UTF-8）" title="查看编码（保存将转 UTF-8）">
+          <option value="utf-8">UTF-8</option>
+          <option value="gbk">GBK</option>
+          <option value="gb18030">GB18030</option>
+          <option value="big5">Big5</option>
+          <option value="iso-8859-1">ISO-8859-1</option>
+        </select>
+        <span class="ex-spacer"></span>
+        <button class="ex-tool" id="editor-save" data-i18n="💾 保存">💾 保存</button>
+        <button class="ex-tool" id="editor-close" data-i18n="✕ 关闭">✕ 关闭</button>
+      </div>
+      <div id="editor-box"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+window.EXPLORER_CONFIG = {
+  root: '/plugins/aexplorer',
+  dir: document.getElementById('explorer-app').dataset.dir
+};
+</script>
+<script src="<?autov("/webGui/javascript/ace/ace.js")?>"></script>
+<script src="<?autov("/webGui/javascript/ace/ext-modelist.js")?>"></script>
+<script src="<?autov("/plugins/aexplorer/javascript/EZView.js")?>"></script>
+<script src="<?autov("/plugins/aexplorer/javascript/explorer.js")?>"></script>
+<script src="<?autov("/plugins/aexplorer/javascript/contextmenu.js")?>"></script>
+<script src="<?autov("/plugins/aexplorer/javascript/upload.js")?>"></script>
+<script src="<?autov("/plugins/aexplorer/javascript/editor.js")?>"></script>
+<script src="<?autov("/plugins/aexplorer/javascript/dfm.js")?>"></script>

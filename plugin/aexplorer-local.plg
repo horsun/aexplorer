@@ -1,0 +1,115 @@
+<?xml version='1.0' standalone='yes'?>
+<!--
+  AExplorer 本地安装版 plg（不联网，不使用 Gitea release）
+  使用方式：
+  1) 将 aexplorer-1.0.txz 放到 /boot/config/plugins/aexplorer/
+  2) 将本文件放到 /boot/config/plugins/aexplorer/aexplorer.plg
+  3) 执行：plugin install /boot/config/plugins/aexplorer/aexplorer.plg
+     或：installplg /boot/config/plugins/aexplorer/aexplorer.plg
+
+  原理：unraid plugin 脚本对 <FILE Name=...> 若文件已存在则校验
+  SHA256 后直接安装（跳过下载）；本文件不含 <URL>，不会尝试联网。
+  卸载：Plugins 页 remove 或 plugin remove aexplorer
+-->
+<!DOCTYPE PLUGIN [
+<!ENTITY name       "aexplorer">
+<!ENTITY launch     "AExplorer">
+<!ENTITY author     "bo-fn">
+<!ENTITY version    "1.0">
+<!ENTITY file       "&name;-&version;.txz">
+]>
+
+<PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" icon="aexplorer.png" min="7.0.0">
+
+<CHANGES>
+### 1.0 (2026-08-08)
+- GitHub 线上里程碑版（对应 Gitea 开发仓库 0.8.x 快照）：扩展查看器 + 内嵌终端 + 首字母选中 + 文件夹打包下载 + i18n 双语 + 日志系统
+
+### 0.6.3 (2026-08-05)
+- 文档全面更新：README / docs/DESIGN / 插件 README（显示名描述）对齐 0.6.2 全功能（顶部 tab、媒体打开、侧键、星标、递归搜索、属性、编码切换等），清除过期内容
+
+### 0.6.2 (2026-08-05)
+- 侧键导航改为全局拦截：去掉 #explorer-app 作用域限制（鼠标在 unraid 框架区域按侧键也会触发浏览器后退）；AExplorer 为独立页面，JS 仅存在于本页，不影响其他页面
+- 图片查看器支持上一张/下一张翻页（当前目录/搜索结果内全部图片，含计数与文件名）
+- 编辑器支持查看编码切换：UTF-8 / GBK / GB18030 / Big5 / ISO-8859-1（按字节解码 TextDecoder，保存转 UTF-8 前确认）
+
+### 0.6.1 (2026-08-05)
+- 修复侧键同时触发浏览器后退：auxclick 的 preventDefault 无法阻止侧键历史导航（浏览器在 mousedown 阶段已决定），改为 mousedown + preventDefault
+
+### 0.6.0 (2026-08-05)
+- 鼠标侧键导航：button 3/4（后退键/前进键）→ 上/下一目录，preventDefault 压过浏览器历史导航
+- 双击智能打开：图片/视频/音频弹窗预览（图片支持翻页）；文本进编辑器；未知类型提示"无法预览+可下载"
+- 搜索结果右键"打开所在目录"；星标收藏（localStorage）；后端递归搜索（mode=search，深度 3 限 400 目录）
+- "计算占用空间"改为"属性"面板（目录大小复用官方 calc）
+
+### 0.5.2 (2026-08-05)
+- 修复 F2 重命名无效：handleKeydown 未绑定 F2 分支，补上 doRename()
+
+### 0.5.1 (2026-08-05)
+- 搜索下钻一层子目录（限前 20 个），结果标注来源子目录
+- 快捷访问区上移到侧边栏顶部（不再置底）
+
+### 0.5.0 (2026-08-05)
+- 树展开真正改为垂直布局：.ex-tree-node flex-wrap + .ex-tree-children flex-basis:100%，子节点换行到父节点下方
+- 折叠 0.4.8/0.4.9 的缩进微调（2px 保留）
+
+### 0.4.8 (2026-08-05)
+- 修复面包屑点击跳转：闭包捕获共享 acc 导致所有 crumb 都导航到完整路径，改为每级独立绑定
+- 列表大小显示改用前端自动单位（B/KB/MB/GB）
+- 树展开缩进 14px→6px
+
+### 0.4.7 (2026-08-05)
+- 修复被官方 CSS 覆盖的布局：explorer.css 全部规则加 #explorer-app 前缀（ID 特异性压过官方 reset）
+- 大图标视图：图标自适应宽度 + 垂直居中；文件名 display:block 居中 + 2 行截断
+- 侧边栏自适应：存储树区 flex:1 滚动、快捷栏固定底部
+
+### 0.4.4 (2026-08-05)
+- 注册为顶部导航 tab（Menu="Tasks:70"），不再挂载在 Main 子菜单；launch 路径同步改为 /AExplorer
+
+### 0.4.3 (2026-08-05)
+- 修复 list_json/tree_json 空响应：apiPost 补齐 X-CSRF-Token（unraid webGui 强制校验 /plugins/ 下 PHP 请求）
+
+### 0.4.2 (2026-08-05)
+- ACE 编辑器改用官方内置资源（/webGui/javascript/ace/），移除自带 9.1M ace 目录，txz 体积大幅减小
+
+### 0.4.0 (2026-08-05)
+- Renamed to AExplorer (independent top-tab page, no conflict with system Browse)
+- Based on Unraid 7 built-in Dynamix File Manager (webGui kernel)
+- UI rewritten: Windows 11 Explorer style (sidebar tree, breadcrumbs, virtual scroll)
+- Reuses system Control.php protocol (mode:file JSON + task queue)
+- CSRF token injection, ex_ prefixed functions, no nchan script conflict
+</CHANGES>
+
+<FILE Run="/bin/bash">
+<INLINE>
+rm -f $(ls /boot/config/plugins/&name;/&name;*.txz 2>/dev/null|grep -v '&version;')
+</INLINE>
+</FILE>
+
+<!-- 本地安装：txz 必须已放置在 Name 指定路径（plugin 脚本存在即校验 SHA256 后直接安装） -->
+<FILE Name="/boot/config/plugins/&name;/&file;" Run="upgradepkg --install-new">
+<SHA256>718f24b500907948bfa5e636ef24d9c0de0db2a9232519153d5e9115f1b1e2f6</SHA256>
+</FILE>
+
+<FILE Run="/bin/bash">
+<INLINE>
+echo ""
+echo "----------------------------------------------------"
+echo " &name; has been installed."
+echo " Version: &version;"
+echo ""
+echo " Find it under top navigation tab: AEXPLORER"
+echo "----------------------------------------------------"
+echo ""
+</INLINE>
+</FILE>
+
+<FILE Run="/bin/bash" Method="remove">
+<INLINE>
+removepkg &name;-&version;
+rm -r /usr/local/emhttp/plugins/&name;
+rm -r /boot/config/plugins/&name;
+</INLINE>
+</FILE>
+
+</PLUGIN>

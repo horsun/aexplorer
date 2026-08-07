@@ -1,0 +1,1178 @@
+/* ============================================================
+   explorer.css — Unraid Explorer Windows 11 风格主题
+   基于官方 Dynamix File Manager 改造
+   ============================================================ */
+/* ---------- CSS 变量：亮/暗主题 ---------- */
+:root {
+
+  --bg: #f5f6f7;
+  --bg-panel: #ffffff;
+  --bg-hover: #f0f1f3;
+  --bg-active: #e3e6e8;
+  --bg-toolbar: #f9f9fa;
+  --border: #e1e3e6;
+  --text: #1f2328;
+  --text-dim: #6a737d;
+  --accent: #2564cf;
+  --accent-hover: #1d55b5;
+  --accent-soft: rgba(37, 100, 207, 0.1);
+  --danger: #c42b1c;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --radius: 8px;
+  --sidebar-w: 220px;
+  --font: "Segoe UI", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+
+}
+/* 暗色主题 */
+body.black-theme, body[data-theme="dark"] {
+
+  --bg: #1a1d21;
+  --bg-panel: #24272c;
+  --bg-hover: #2d3137;
+  --bg-active: #353a41;
+  --bg-toolbar: #202328;
+  --border: #34383f;
+  --text: #e6e8eb;
+  --text-dim: #9aa0a8;
+  --accent: #4c8dff;
+  --accent-hover: #6ba1ff;
+  --accent-soft: rgba(76, 141, 255, 0.15);
+  --danger: #f14c38;
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+
+}
+#explorer-app * {
+ margin: 0; padding: 0; box-sizing: border-box; 
+}
+/* 重置 unraid 全局按钮 min-width（default-base.css 86px 会撑爆 header/footer 按钮） */
+#explorer-app button,
+#explorer-app input[type="button"], #explorer-app input[type="submit"], #explorer-app input[type="reset"] {
+  min-width: 0;
+}
+#explorer-app {
+
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 200px); /* 默认值；init 时 fitToViewport() 实测顶部偏移+footer 高度自适应覆盖 */
+  min-height: 420px;
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+  overflow: hidden;
+  user-select: none;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+
+}
+/* 全屏：原生 Fullscreen API */
+#explorer-app:fullscreen {
+  height: 100vh;
+  border-radius: 0;
+  border: none;
+  background: var(--bg);
+}
+/* 全屏：CSS 覆盖回退（iOS Safari / 权限拒绝） */
+#explorer-app.ex-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  z-index: 2147483000;
+  border-radius: 0 !important;
+  border: none !important;
+}
+#btn-fullscreen { font-size: 15px; }
+#tool-sort { font-weight: 600; white-space: nowrap; }
+/* ============================================================
+   导航栏
+   ============================================================ */
+#explorer-app .ex-navbar {
+
+  display: flex;
+  align-items: center;
+  gap: clamp(2px, 1.2vw, 8px);
+  padding: 8px clamp(4px, 2vw, 12px);
+  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+
+}
+#explorer-app .ex-nav-actions {
+ display: flex; gap: 2px; 
+}
+#explorer-app .ex-icon-btn {
+
+  width: clamp(26px, 7vw, 30px); height: clamp(26px, 7vw, 30px);
+  border: none;
+  background: transparent;
+  color: var(--text);
+  border-radius: 6px;
+  font-size: 15px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+  font-family: var(--font);
+
+}
+#explorer-app .ex-icon-btn:hover {
+ background: var(--bg-hover); 
+}
+#explorer-app .ex-icon-btn:active {
+ background: var(--bg-active); 
+}
+#explorer-app .ex-icon-btn:disabled {
+ opacity: 0.35; cursor: default; 
+}
+#explorer-app .ex-icon-btn.active {
+ background: var(--accent-soft); color: var(--accent); 
+}
+#explorer-app .ex-address {
+
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 10px;
+  overflow: hidden;
+  cursor: text;
+
+}
+#explorer-app .ex-address:hover {
+ border-color: var(--accent); 
+}
+#explorer-app .ex-crumb {
+ display: flex; align-items: center; gap: 2px; white-space: nowrap; overflow: hidden; 
+}
+#explorer-app .ex-crumb-sep {
+ color: var(--text-dim); margin: 0 1px; font-size: 11px; 
+}
+#explorer-app .ex-crumb-item {
+
+  padding: 3px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  color: var(--text);
+  text-decoration: none;
+
+}
+#explorer-app .ex-crumb-item:hover {
+ background: var(--bg-hover); color: var(--accent); 
+}
+#explorer-app .ex-crumb-item.current {
+ color: var(--accent); font-weight: 600; 
+}
+#explorer-app #address-input {
+
+  display: none;
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  font-family: var(--font);
+  width: 100%;
+
+}
+#explorer-app .ex-search {
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: clamp(90px, 22vw, 170px);
+  height: 32px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 8px;
+
+}
+#explorer-app .ex-search:focus-within {
+ border-color: var(--accent); 
+}
+#explorer-app .ex-search input {
+
+  border: none; outline: none;
+  background: transparent;
+  color: var(--text);
+  width: 100%;
+  font-size: 13px;
+  font-family: var(--font);
+
+}
+#explorer-app .ex-search-clear {
+
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 0 3px;
+  display: none;
+
+}
+#explorer-app .ex-search-clear:hover {
+ color: var(--text); 
+}
+#explorer-app .ex-view-toggle {
+ display: flex; gap: 2px; 
+}
+/* ============================================================
+   工具栏
+   ============================================================ */
+#explorer-app .ex-toolbar {
+
+  display: flex;
+  align-items: center;
+  gap: clamp(2px, 0.8vw, 4px);
+  padding: 5px clamp(4px, 2vw, 12px);
+  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+
+}
+#explorer-app .ex-tool {
+
+  padding: 5px 10px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--font);
+  transition: background 0.15s ease, opacity 0.15s ease;
+
+}
+#explorer-app .ex-tool:hover:not(:disabled) {
+ background: var(--bg-hover); 
+}
+#explorer-app .ex-tool:active:not(:disabled) {
+ background: var(--bg-active); 
+}
+#explorer-app .ex-tool:disabled {
+ opacity: 0.35; cursor: default; 
+}
+#explorer-app .ex-tool.danger:hover:not(:disabled) {
+ background: rgba(196, 43, 28, 0.12); color: var(--danger); 
+}
+#explorer-app .ex-tool-sep {
+
+  width: 1px; height: 20px;
+  background: var(--border);
+  margin: 0 clamp(2px, 0.8vw, 6px);
+
+}
+/* ============================================================
+   主区域
+   ============================================================ */
+#explorer-app .ex-main {
+
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+
+}
+/* ---------- 侧边栏 ---------- */
+#explorer-app .ex-sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 6px 0;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+#explorer-app .ex-sidebar .ex-storage {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+#explorer-app .ex-sidebar .ex-storage .ex-tree {
+  padding-bottom: 8px;
+}
+#explorer-app .ex-sidebar-section {
+ padding: 4px 8px; 
+}
+#explorer-app .ex-sidebar-title {
+
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 8px 4px;
+
+}
+#explorer-app .ex-tree {
+ padding-bottom: 4px; 
+}
+#explorer-app .ex-tree-node {
+
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  color: var(--text);
+  flex-wrap: wrap;
+
+}
+#explorer-app .ex-tree-node:hover {
+ background: var(--bg-hover); 
+}
+#explorer-app .ex-tree-node.active {
+ background: var(--accent-soft); color: var(--accent); 
+}
+#explorer-app .ex-tree-caret {
+
+  width: 16px;
+  font-size: 10px;
+  color: var(--text-dim);
+  text-align: center;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+  cursor: pointer;
+
+}
+#explorer-app .ex-tree-caret.open {
+ transform: rotate(90deg); 
+}
+#explorer-app .ex-tree-caret.empty {
+ visibility: hidden; 
+}
+#explorer-app .ex-tree-icon {
+ width: 18px; text-align: center; font-size: 13px; flex-shrink: 0; 
+}
+#explorer-app .ex-tree-label {
+ overflow: hidden; text-overflow: ellipsis; 
+}
+#explorer-app .ex-tree-children {
+  flex-basis: 100%;
+  width: 100%;
+  padding-left: 2px;
+  display: none;
+}
+#explorer-app .ex-tree-children.open {
+ display: block; 
+}
+/* ---------- 文件列表 ---------- */
+#explorer-app .ex-content {
+
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-panel);
+  overflow: hidden;
+  min-width: 0;
+
+}
+#explorer-app .ex-list-header {
+
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  background: var(--bg-toolbar);
+
+}
+#explorer-app .ex-list-header span {
+ cursor: pointer; padding: 2px 4px; border-radius: 4px; 
+}
+#explorer-app .ex-list-header span:hover {
+ background: var(--bg-hover); color: var(--text); 
+}
+#explorer-app .col-name {
+ flex: 2.5; min-width: 160px; 
+}
+#explorer-app .col-owner {
+ flex: 0.8; min-width: 70px; 
+}
+#explorer-app .col-perm {
+ flex: 0.6; min-width: 60px; 
+}
+#explorer-app .col-size {
+ flex: 0.8; min-width: 70px; text-align: right; 
+}
+#explorer-app .col-mtime {
+ flex: 1.2; min-width: 110px; 
+}
+#explorer-app .col-loc {
+ flex: 1; min-width: 90px; 
+}
+#explorer-app .sort-ind {
+ font-size: 10px; color: var(--accent); font-weight: 700; }
+#explorer-app .ex-list-header span { cursor: pointer; user-select: none; }
+#explorer-app .ex-list {
+
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px;
+  position: relative;
+  min-height: 0;
+
+}
+/* 虚拟滚动容器 */
+#explorer-app .ex-vlist {
+
+  position: relative;
+  width: 100%;
+  min-height: 100%;
+
+}
+/* 行 */
+#explorer-app .ex-row {
+
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: default;
+  gap: 4px;
+  transition: background 0.1s ease;
+  box-sizing: border-box;
+  overflow: hidden;
+
+}
+#explorer-app .ex-row:hover {
+ background: var(--bg-hover); 
+}
+#explorer-app .ex-row.selected {
+ background: var(--accent-soft);
+ box-shadow: inset 3px 0 0 var(--accent); /* 左侧强调条 */
+}
+#explorer-app .ex-row.selected + .ex-row.selected {
+ box-shadow: inset 3px 0 0 var(--accent), inset 0 1px 0 0 rgba(255,255,255,.22), inset 0 -1px 0 0 rgba(0,0,0,.18); /* 相邻选中行之间分隔线 */
+}
+#explorer-app .ex-row.selected .col-name {
+ color: var(--accent); 
+}
+/* 大图标（grid）视图选中：圆角蓝框（覆盖列表的左侧条 + 相邻分隔线，格子间有间距无需分隔） */
+#explorer-app .ex-row.ex-grid {
+  border-radius: 8px;
+}
+#explorer-app .ex-row.ex-grid.selected,
+#explorer-app .ex-row.ex-grid.selected + .ex-row.ex-grid.selected {
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+#explorer-app .ex-row.ex-grid.selected .ex-row-name {
+  color: var(--accent);
+}
+#explorer-app .ex-row .col-name {
+
+  flex: 2.5; min-width: 160px;
+  display: flex; align-items: center; gap: 6px;
+  overflow: hidden;
+
+}
+#explorer-app .ex-row .col-owner {
+ flex: 0.8; min-width: 70px; color: var(--text-dim); 
+}
+#explorer-app .ex-row .col-perm {
+ flex: 0.6; min-width: 60px; color: var(--text-dim); font-family: monospace; font-size: 11px; 
+}
+#explorer-app .ex-row .col-size {
+ flex: 0.8; min-width: 70px; text-align: right; color: var(--text-dim); 
+}
+#explorer-app .ex-row .col-mtime {
+ flex: 1.2; min-width: 110px; color: var(--text-dim); 
+}
+#explorer-app .ex-row .col-loc {
+ flex: 1; min-width: 90px; color: var(--text-dim); font-size: 11px; 
+}
+#explorer-app .ex-row-icon {
+ font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; 
+}
+#explorer-app .ex-row-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+#explorer-app .ex-search-src {
+  font-size: 10px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-left: 4px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+#explorer-app .ex-row-name:hover {
+ text-decoration: underline; 
+}
+/* 重命名内联输入 */
+#explorer-app .ex-rename-input {
+
+  border: 1px solid var(--accent);
+  outline: none;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 13px;
+  font-family: var(--font);
+  background: var(--bg-panel);
+  color: var(--text);
+  width: 60%;
+
+}
+/* grid 视图（虚拟滚动版） */
+#explorer-app .ex-list.grid .ex-row-icon {
+  font-size: 28px;
+  width: auto;
+  min-width: 32px;
+  height: 36px;
+  line-height: 36px;
+  text-align: center;
+}
+#explorer-app .ex-list.grid .ex-row-name {
+  max-width: 92px;
+  font-size: 11px;
+  word-break: break-all;
+  white-space: normal;
+  display: block;
+  line-height: 1.2;
+  max-height: 2.5em;
+  overflow: hidden;
+  text-align: center;
+}
+#explorer-app .ex-list.grid .ex-row {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+#explorer-app .ex-list.grid .ex-row:hover {
+  background: var(--bg-hover);
+}
+#explorer-app .ex-empty {
+
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 13px;
+
+}
+/* 进度条 */
+#explorer-app .ex-progress {
+
+  height: 24px;
+  background: var(--bg-toolbar);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 8px;
+  flex-shrink: 0;
+
+}
+#explorer-app .ex-progress-fill {
+
+  height: 6px;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.2s ease;
+  min-width: 0;
+  flex: 1;
+  max-width: calc(100% - 50px);
+
+}
+#explorer-app #progress-text {
+ font-size: 11px; color: var(--text-dim); white-space: nowrap; 
+}
+/* ============================================================
+   状态栏
+   ============================================================ */
+#explorer-app .ex-statusbar {
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 14px;
+  background: var(--bg-toolbar);
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+
+}
+#explorer-app .ex-spacer {
+ flex: 1; 
+}
+/* ---------- 内嵌终端面板 ---------- */
+#explorer-app .ex-term-panel {
+  flex-shrink: 0;
+  height: 40vh;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border);
+  background: #000;
+}
+#explorer-app .ex-term-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 10px;
+  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+#explorer-app .ex-term-bar #term-title {
+  font-family: Consolas, Menlo, monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#explorer-app .ex-term-panel iframe {
+  flex: 1;
+  min-height: 0;
+}
+/* ============================================================
+   右键菜单
+   ============================================================ */
+#explorer-app .ex-contextmenu {
+
+  position: fixed;
+  z-index: 99999;
+  min-width: 190px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 4px;
+  display: none;
+  font-size: 12px;
+
+}
+#explorer-app .ex-contextmenu.open {
+ display: block; 
+}
+#explorer-app .ex-ctx-item {
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  color: var(--text);
+
+}
+#explorer-app .ex-ctx-item:hover {
+ background: var(--bg-hover); 
+}
+#explorer-app .ex-ctx-item:active {
+ background: var(--bg-active); 
+}
+#explorer-app .ex-ctx-item.danger {
+ color: var(--danger); 
+}
+#explorer-app .ex-ctx-item.danger:hover {
+ background: rgba(196, 43, 28, 0.1); 
+}
+#explorer-app .ex-ctx-item.disabled {
+ opacity: 0.35; cursor: default; 
+}
+#explorer-app .ex-ctx-item.disabled:hover {
+ background: transparent; 
+}
+#explorer-app .ex-ctx-item .ctx-ico {
+ width: 18px; text-align: center; 
+}
+#explorer-app .ex-ctx-sep {
+ height: 1px; background: var(--border); margin: 4px 8px; 
+}
+#explorer-app .ex-ctx-title {
+
+  font-size: 10px;
+  color: var(--text-dim);
+  padding: 4px 12px 2px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+}
+/* ============================================================
+   模态框
+   ============================================================ */
+#explorer-app .ex-modal-mask {
+
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 90000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+}
+#explorer-app .ex-modal {
+
+  min-width: 420px;
+  max-width: 640px;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: var(--bg-panel);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  font-size: 13px;
+  color: var(--text);
+
+}
+/* 查看器类弹窗（文本/代码/Markdown/表格/图片/视频）加宽 */
+#explorer-app .ex-modal.ex-modal-wide {
+  max-width: min(1100px, 94vw);
+  width: min(1100px, 94vw);
+}
+#explorer-app .ex-modal h3 .ex-btn {
+  margin-left: 8px;
+}
+#explorer-app .ex-modal h3 {
+ font-size: 16px; margin-bottom: 14px; 
+}
+#explorer-app .ex-modal .ex-form-row {
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+
+}
+#explorer-app .ex-modal .ex-form-row label {
+ width: 90px; color: var(--text-dim); flex-shrink: 0; 
+}
+#explorer-app .ex-modal input[type="text"], #explorer-app .ex-modal select {
+
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-panel);
+  color: var(--text);
+  font-size: 13px;
+  font-family: var(--font);
+  outline: none;
+
+}
+#explorer-app .ex-modal input[type="text"]:focus, #explorer-app .ex-modal select:focus {
+ border-color: var(--accent); 
+}
+#explorer-app .ex-modal-actions {
+
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+
+}
+#explorer-app .ex-btn {
+
+  padding: 6px 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-panel);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--font);
+
+}
+#explorer-app .ex-btn:hover {
+ background: var(--bg-hover); 
+}
+#explorer-app .ex-btn.primary {
+
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+
+}
+#explorer-app .ex-btn.primary:hover {
+ background: var(--accent-hover); 
+}
+#explorer-app .ex-btn.danger {
+
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+
+}
+/* ============================================================
+   ACE 编辑器
+   ============================================================ */
+#explorer-app .ex-editor-mask {
+
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 95000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+
+}
+#explorer-app .ex-editor {
+
+  width: 100%;
+  max-width: 1100px;
+  height: 85vh;
+  background: var(--bg-panel);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+}
+#explorer-app .ex-editor-toolbar {
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text);
+
+}
+#explorer-app .ex-editor-toolbar .ex-spacer {
+ flex: 1; 
+}
+#explorer-app #editor-box {
+
+  flex: 1;
+  min-height: 0;
+  position: relative;
+
+}
+#explorer-app #editor-box .ace_editor {
+ position: absolute; inset: 0; 
+}
+/* ============================================================
+   Toast 提示
+   ============================================================ */
+#explorer-app .ex-toast {
+
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--bg-panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 10px 20px;
+  font-size: 13px;
+  z-index: 99999;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  max-width: 80vw;
+  pointer-events: none;
+
+}
+#explorer-app .ex-toast.show {
+ opacity: 1; transform: translateX(-50%) translateY(0); 
+}
+#explorer-app .ex-toast.error {
+ border-color: var(--danger); color: var(--danger); 
+}
+/* ---------- 媒体预览（图片/视频/音频） ---------- */
+#explorer-app .ex-media {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 120px;
+  max-height: 70vh;
+  overflow: auto;
+  background: #0d0f12;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+#explorer-app .ex-media img {
+  max-width: 100%;
+  max-height: 65vh;
+  object-fit: contain;
+}
+#explorer-app .ex-media video {
+  max-width: 100%;
+  max-height: 65vh;
+}
+#explorer-app .ex-media audio {
+  width: 100%;
+  margin: 20px;
+}
+#explorer-app .ex-media-hint {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin: 8px 0 4px;
+}
+/* ---------- 属性面板 ---------- */
+#explorer-app .ex-prop-table {
+  margin: 10px 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+#explorer-app .ex-prop-row {
+  display: flex;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+}
+#explorer-app .ex-prop-row:last-child {
+  border-bottom: none;
+}
+#explorer-app .ex-prop-key {
+  width: 90px;
+  flex-shrink: 0;
+  color: var(--text-dim);
+}
+#explorer-app .ex-prop-val {
+  flex: 1;
+  word-break: break-all;
+  color: var(--text);
+}
+#explorer-app .ex-row.ex-marquee-hit {
+  background: rgba(66, 133, 244, 0.18);
+}
+/* 选框挂载在 document.body（#explorer-app 外），选择器不带前缀 */
+.ex-marquee {
+  position: fixed;
+  z-index: 1000;
+  background: rgba(66, 133, 244, 0.15);
+  border: 1px solid rgba(66, 133, 244, 0.85);
+  pointer-events: none;
+  display: none;
+}
+#explorer-app .ex-prop-hint {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin: 8px 0;
+}
+/* ---------- 缩略图（已移除 0.6.9：大图加载卡顿） ---------- */
+#explorer-app .ex-img-bar {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin: 4px 0 10px;
+  word-break: break-all;
+}
+#explorer-app .ex-editor-enc {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 12px;
+  padding: 3px 6px;
+  margin-left: 8px;
+}
+/* ============================================================
+   拖拽中样式
+   ============================================================ */
+#explorer-app .ex-row.dragging {
+ opacity: 0.5; 
+}
+#explorer-app .ex-tree-node.drop-target {
+ background: var(--accent-soft); outline: 1px dashed var(--accent); 
+}
+/* 拖放目标高亮（目录行/面包屑/地址栏） */
+#explorer-app .ex-row.ex-drop-target,
+#explorer-app .ex-crumb-item.ex-drop-target,
+#explorer-app .ex-address.ex-drop-target {
+ background: var(--accent-soft); outline: 2px dashed var(--accent); outline-offset: -2px;
+}
+#explorer-app .ex-row.ex-grid.ex-drop-target {
+ box-shadow: inset 0 0 0 2px var(--accent); border-radius: 8px;
+}
+/* ============================================================
+   滚动条（WebKit）
+   ============================================================ */
+#explorer-app ::-webkit-scrollbar {
+ width: 10px; height: 10px; 
+}
+#explorer-app ::-webkit-scrollbar-track {
+ background: transparent; 
+}
+#explorer-app ::-webkit-scrollbar-thumb {
+
+  background: var(--border);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+
+}
+#explorer-app ::-webkit-scrollbar-thumb:hover {
+ background: var(--text-dim); border: 2px solid transparent; background-clip: content-box; 
+}
+
+
+/* ============================================================
+   响应式
+   ============================================================ */
+@media (max-width: 900px) {
+:root {
+ --sidebar-w: 180px; 
+}
+#explorer-app .col-owner {
+ display: none; 
+}
+
+
+}
+
+
+@media (max-width: 768px) {
+#explorer-app .ex-sidebar {
+
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  
+}
+#explorer-app .ex-sidebar.open {
+ transform: translateX(0); 
+}
+#explorer-app .col-perm, #explorer-app .col-owner, #explorer-app .col-loc {
+ display: none; 
+}
+#explorer-app .ex-search {
+ width: clamp(70px, 20vw, 110px); 
+}
+#explorer-app .ex-toolbar {
+ flex-wrap: wrap; 
+}
+#explorer-app .ex-tool {
+ padding: 5px 8px; 
+}
+
+
+}
+
+
+/* ============================================================
+   移动端适配（≤768px，纯响应式增量，桌面端不受影响）
+   ============================================================ */
+.ex-menu-btn, .ex-more-btn { display: none; }
+#more-menu { display: none; position: fixed; z-index: 950; min-width: 160px; background: var(--bg-panel, #fff); border: 1px solid var(--border); border-radius: 8px; padding: 4px; box-shadow: 0 4px 16px rgba(0,0,0,.25); }
+#more-menu .ex-more-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; border: none; background: none; color: var(--text, #333); font-size: 14px; text-align: left; border-radius: 6px; cursor: pointer; }
+#more-menu .ex-more-item:hover { background: var(--bg-hover, #eee); }
+#more-menu .ex-more-item:disabled { opacity: .4; }
+
+@media (max-width: 768px) {
+  /* 汉堡按钮 */
+  .ex-menu-btn { display: inline-flex; }
+  /* 树抽屉 */
+  #explorer-app .ex-sidebar {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: 250px; max-width: 82vw;
+    z-index: 900;
+    transform: translateX(-105%);
+    transition: transform .2s ease;
+    box-shadow: 2px 0 12px rgba(0,0,0,.35);
+  }
+  #explorer-app .ex-sidebar.open { transform: translateX(0); }
+  #explorer-app.sidebar-open::after {
+    content: ''; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 890;
+  }
+  /* 工具栏折叠：仅保留 新建/上传/搜索/刷新/⋯ */
+  #explorer-app .ex-toolbar { flex-wrap: nowrap; overflow-x: auto; }
+  #explorer-app .ex-toolbar .ex-tool-sep { display: none; }
+  #explorer-app .ex-toolbar #tool-download,
+  #explorer-app .ex-toolbar #tool-copy,
+  #explorer-app .ex-toolbar #tool-move,
+  #explorer-app .ex-toolbar #tool-rename,
+  #explorer-app .ex-toolbar #tool-owner,
+  #explorer-app .ex-toolbar #tool-perm,
+  #explorer-app .ex-toolbar #tool-calc,
+  #explorer-app .ex-toolbar #tool-delete { display: none; }
+  .ex-more-btn { display: inline-flex; }
+  /* 导航栏压缩：地址栏保留最小可见宽度（面包屑可横向滑动），搜索框收窄 */
+  #explorer-app .ex-navbar { gap: clamp(2px, 1.2vw, 4px); }
+  #explorer-app .ex-address { flex: 1 1 18%; min-width: 60px; }
+  #explorer-app .ex-address .ex-crumb { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  #explorer-app .ex-address .ex-crumb::-webkit-scrollbar { display: none; }
+  #explorer-app .ex-view-toggle .ex-icon-btn { width: clamp(24px, 6.5vw, 28px); height: clamp(24px, 6.5vw, 28px); }
+  /* 模态框按钮触屏友好：撑满换行 */
+  #explorer-app .ex-modal-actions { flex-wrap: wrap; }
+  #explorer-app .ex-modal-actions .ex-btn { flex: 1 1 auto; min-height: 40px; }
+  /* 媒体查看器手机端留按钮空间 */
+  #explorer-app .ex-media img, #explorer-app .ex-media video { max-height: 56vh; }
+  /* 单列列表：仅显示名称 + 当前排序属性（移动端空间不足，排序切换时联动） */
+  #explorer-app .col-owner, #explorer-app .col-perm,
+  #explorer-app .col-size, #explorer-app .col-mtime, #explorer-app .col-loc { display: none; }
+  #explorer-app[data-sort="size"] .col-size,
+  #explorer-app[data-sort="mtime"] .col-mtime { display: flex; }
+  /* 模态框全屏 */
+  #explorer-app .ex-modal {
+    width: 100%; max-width: 100%;
+    height: 100%; max-height: 100%;
+    border-radius: 0;
+    margin: 0;
+  }
+  #explorer-app .ex-editor-mask .ex-editor { width: 100%; height: 100%; max-width: 100%; border-radius: 0; }
+  /* 状态栏留白（触屏拇指） */
+  #explorer-app .ex-statusbar { padding-bottom: 4px; }
+}
+
+/* ---------- 日志查看 ---------- */
+#explorer-app .ex-status-btn {
+  background: none; border: 1px solid var(--border); border-radius: var(--radius);
+  color: var(--text-dim); font-size: 11px; padding: 1px 8px; margin-left: 8px; cursor: pointer; white-space: nowrap;
+}
+#explorer-app .ex-status-btn:hover { color: var(--accent); border-color: var(--accent); }
+#explorer-app .ex-log-view {
+  width: 100%; max-height: 55vh; overflow: auto; margin: 10px 0 0;
+  padding: 8px 10px; background: #0d0f12; color: #9ece6a;
+  font-family: 'Consolas','Menlo',monospace; font-size: 12px; line-height: 1.5;
+  border-radius: 6px; white-space: pre-wrap; word-break: break-all;
+}
+@media (max-width: 768px) {
+  #explorer-app .ex-log-view { max-height: 50vh; }
+  #explorer-app .ex-status-btn { margin-left: 4px; padding: 2px 6px; }
+}
+
+/* ============ 扩展查看器（0.8.5） ============ */
+#explorer-app .ex-viewer { max-height: 62vh; overflow: auto; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; }
+#explorer-app .ex-pre { margin: 0; white-space: pre-wrap; word-break: break-all; font-family: Consolas, Menlo, 'Courier New', monospace; font-size: 12.5px; line-height: 1.6; }
+#explorer-app .ex-code { margin: 0; font-size: 12px; max-height: 60vh; overflow: auto; }
+#explorer-app .ex-md { font-size: 13px; line-height: 1.6; word-break: break-word; }
+#explorer-app .ex-md h1, #explorer-app .ex-md h2, #explorer-app .ex-md h3 { margin: 8px 0 6px; }
+#explorer-app .ex-md code { background: rgba(128,128,128,.15); padding: 1px 4px; border-radius: 3px; }
+#explorer-app .ex-md pre { background: rgba(128,128,128,.12); padding: 8px; border-radius: 6px; overflow: auto; }
+#explorer-app .ex-md img { max-width: 100%; }
+#explorer-app .ex-table-wrap { overflow: auto; max-height: 60vh; }
+#explorer-app .ex-table { border-collapse: collapse; font-size: 12px; }
+#explorer-app .ex-table td, #explorer-app .ex-table th { border: 1px solid rgba(128,128,128,.35); padding: 3px 8px; white-space: nowrap; max-width: 400px; overflow: hidden; text-overflow: ellipsis; }
+#explorer-app .ex-table th { background: rgba(128,128,128,.12); }
+#explorer-app .ex-pdf { width: 100%; height: 62vh; border: 0; }
+#explorer-app .ex-dim { font-size: 11px; opacity: .6; margin: 6px 0 0; }

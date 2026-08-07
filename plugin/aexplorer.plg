@@ -1,0 +1,244 @@
+<?xml version='1.0' standalone='yes'?>
+<!DOCTYPE PLUGIN [
+<!ENTITY name       "aexplorer">
+<!ENTITY launch     "AExplorer">
+<!ENTITY author     "bo-fn">
+<!ENTITY version    "1.0">
+<!ENTITY branch     "main">
+<!ENTITY file       "&name;-&version;.txz">
+<!ENTITY github     "horsun/&name;">
+<!ENTITY repo       "https://github.com/horsun/&name;">
+<!ENTITY releaseURL "&repo;/releases/download/&version;">
+<!ENTITY pluginURL  "&repo;/raw/branch/&branch;/plugin/&name;.plg">
+]>
+
+<PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" icon="aexplorer.png" min="7.0.0" support="&repo;">
+
+<CHANGES>
+### 0.8.7 (2026-08-08)
+- 侧边栏树双击：展开/收缩下级并打开目录（再双击收缩；与单击导航、三角折叠独立共存）
+- 文档全面更新（README 徽章 0.8.6、拖放/树交互特性；DESIGN 变更历史/撤回记录修正/打包产物动态版本）
+
+### 0.8.6 (2026-08-08)
+- 拖放操作：文件/目录拖到目录行、面包屑、地址栏或侧边栏树，松开弹「复制/移动/取消」三选
+- 侧边栏树交互拆分：点击三角仅展开/折叠下级，点击名称直接打开目录
+- 移动端全屏按钮（Fullscreen API + iOS CSS 回退）
+- 排序循环按钮：名称 → 修改时间 → 大小（固定降序）
+- 状态栏/header 百分比化显示
+- 操作完成后列表自动刷新修复
+- 侧边栏树拖放统一三选弹窗（修复单文件直移、多文件不触发）
+
+### 0.8.5 (2026-08-07)
+- 扩展文件打开：文本/代码双击直开 ACE 编辑器（语法高亮 + 编码切换）；Markdown 渲染（marked + DOMPurify 消毒）；CSV 表格化；Excel 多 sheet 切换（SheetJS）；SQLite 只读浏览 + 表/分页（限 50MB）；压缩包内容列表（zip/tar 只读，限 2000 条）；PDF 浏览器原生查看；视频编码不支持回退提示
+- 查看器弹窗加宽（ex-modal-wide，min(1100px, 94vw)）+ 内容区独立背景/圆角；操作弹窗保持 640px
+- vendor 本地库：marked/Prism/DOMPurify/SheetJS 打包进插件（懒加载，无外网依赖）
+- 内嵌终端：右键空白处「在此打开终端」→ 页面底部面板（非新 tab）；ttyd 多实例（每目录独立 socket，-o 断开自动退出）；rcfile 方案解决 /etc/profile cd $HOME 导致 cwd 错位；socket 轮询就绪 + iframe 失败自动重试
+- 首字母选中（type-ahead）：输入英文首字母选中当前目录匹配项，800ms 窗口拼前缀，重复键循环下一个，自动滚动定位，大小写不敏感
+- 修复 ttyd 首次启动需点两次（PHP 轮询 socket 就绪才返回 + 前端 iframe onerror 重试）
+### 0.8.4 (2026-08-06)
+- 文件夹打包下载：tar 生成到插件目录 download/（nginx 静态直出，绕开 php-fpm 流式，大文件稳定）；随机 token 防枚举 + 1 GiB 限制；三层自动清理（下载后 60s 删 / 列表加载清扫 / 生成前清扫，>1h 残留）
+- 修复下载按钮灰色：目录/单选均可下载（旧逻辑仅限单文件）
+- 修复状态栏磁盘统计：user share（fuse/shfs）statvfs 不可靠 → 聚合所有真实盘；disk/boot 路径直接 statvfs
+- 状态栏优化：文件大小自动单位（总大小/可用空间）、百分比改为可用占比（x% 可用/x% free，国际化）、大数字缩写 K/M（不用中文单位）
+- 弹窗国际化补全：17 处硬编码中文（媒体预览/重命名/复制/移动/删除/属主/权限/搜索空态）+ 16 个新字典 key
+- 列排序箭头：所有可排序列头补箭头指示（↑/↓ + 强调色）
+- 修复复制/移动失效：doCopy 确认时 closeModal 先清空弹窗 DOM 再读 checkbox → null.checked 抛异常 → 任务未提交（静默失败）；改为先读值再关闭
+- 修复操作日志未记录：runAction 的日志代码在函数体外（只执行一次）→ 移入函数内；补全下载/编辑器保存记录
+- 复制/移动同目录校验：官方静默拒绝 → 前端提前提示
+- ensure_fm 消费端自愈：后台任务（删除/复制/移动/属主/权限）提交前幂等拉起 file_manager（修复任务入队后无人消费卡住）
+- 日志系统：操作记录（aexplorer-ops.log）+ 应用日志（aexplorer.log），1MB 轮转保留 .1、权限 0600、防换行注入；footer 新增「日志」「操作记录」按钮弹窗查看（最后 64KB）/刷新/清空
+- 弹窗点击外部关闭：通用 modal 点遮罩关闭、编辑器点遮罩关闭（带 dirty 确认）、右键菜单点外部关闭
+- 移除 detail 视图（与 list 完全相同，保留 list/grid 双视图）
+
+### 0.8.2 (2026-08-05)
+- 网格视图选中样式优化：grid 行加 ex-grid class，选中改为圆角 8px + 外圈 2px 强调色边框（替代列表风格的左侧条 + 相邻分隔线，格子间有间距无需分隔）
+
+### 0.8.1 (2026-08-05)
+- 修复路径栏重复占位文字：address-bar 容器的 data-i18n 把内部空白文本节点全替换成占位符 → 改 data-i18n-title（只翻译 tooltip；实测面包屑正常、无重复文本）
+
+### 0.8.0 (2026-08-05)
+- 修复 i18n 图标按钮文字化：后退/前进/上级/视图切换按钮的箭头符号被 data-i18n 当作文本替换 → 新增 `data-i18n-title` 属性（只翻译 tooltip 不动内容），7 个图标按钮已迁移（实测 ←→↑≡▦☰ 图标 + 英文 tooltip 正常）
+
+### 0.7.9 (2026-08-05)
+- 国际化（i18n）：unraid 会话语言（$_SESSION['locale']）注入 AE_LOCALE；前端 I18N 中英字典 + t()（含 {占位符} 插值）；页面静态文案 data-i18n 批量渲染、工具栏/导航/侧边栏/列头/右键菜单/弹窗/状态栏/上传/编辑器全量双语
+- README 精简为要点版（详细移入 DESIGN §12 变更历史）+ Powered by AI 标注
+
+### 0.7.8 (2026-08-05)
+- 安全加固：AE_USERS 注入 JSON_HEX_TAG（`&lt;`/`&gt;` 转义，防理论 `&lt;/script&gt;` 注入）
+- 安全审计：全代码无硬编码凭据、命令全 escapeshellarg、路径白名单 + realpath、CSRF 全覆盖、XSS 转义——结论无漏洞；Gitea 仓库已确认私密（审计时发现公开，已改）
+
+### 0.7.7 (2026-08-05)
+- 移动端修正（用户实测反馈）：
+  - 地址栏消失修复：media query 误用 `min-width: 0` 导致 flex 压缩到不可见 → 改 `flex: 1 1 90px; min-width: 90px`，面包屑可横向滑动
+  - 文件打开适配：模态框按钮触屏撑满（flex: 1 + min-height 40px）、媒体查看器 56vh、编辑器/模态全屏
+  - IS_MOBILE 放宽为仅宽度判断（≤768px 即移动交互，DevTools 模拟与真机一致；长按菜单依赖 touch 事件自然生效）
+
+### 0.7.6 (2026-08-05)
+- 移动端适配（DESIGN §11 落地）：viewport meta；≤768px 响应式——工具栏折叠（新建/上传/搜索/刷新 + ⋯ 更多弹出）、左侧树汉堡抽屉（☰ + 遮罩）、列表单列、行高 44px、模态框全屏
+- 触屏交互：单击直接打开（取消双击等待）、长按 500ms 弹右键菜单（iOS Safari 长按自实现）、框选禁用
+- 桌面端零影响（IS_MOBILE = 触屏 + ≤768px 才启用移动交互）
+- 部署教训：AExplorer.page 热部署前必须统一 LF 换行（patch 混合 CRLF/LF 导致 unraid 解析 .page 失败 → tab 消失页面空白；build.sh 打包已有 LF 转换）
+
+### 0.7.5 (2026-08-05)
+- 文档全面修订：README.md / docs/DESIGN.md 对齐 0.7.4 全功能（框选/owner 下拉/自动刷新/解压/文件夹拖拽/Nchan 修复/侧键 capture/footer 自适应），修正过期内容（视图数量/拖拽到树/响应式等）；DESIGN 新增 §11 移动端适配 TODO（方案已定未实现）
+
+### 0.7.4 (2026-08-05)
+- 修复鼠标侧键仍触发浏览器后退：冒泡阶段拦截太晚（浏览器在事件分发早期已决定侧键导航），改为 capture 捕获阶段 + mousedown/mouseup/auxclick 三事件全拦截 + stopPropagation（实测 defaultPrevented 全部生效，左键不受影响）
+
+### 0.7.3 (2026-08-05)
+- 内容区与页面 footer 自适应：fitToViewport 实测顶部偏移，高度 = 视口 - 顶部 - 45px 底部留白（footer 自然落在留白区，不再贴底/被遮）；多轮校准 + resize/load 监听；覆盖 CSS min-height 420px 默认（小视口顶回问题）
+
+### 0.7.2 (2026-08-05)
+- 修复框选框不可见：.ex-marquee 挂载在 document.body（#explorer-app 外），CSS 选择器去掉前缀后样式生效（半透明蓝底 + 蓝边框）
+- 选中行视觉：左侧 accent 强调条 + 相邻选中行之间分隔线（box-shadow，不占布局）
+
+### 0.7.1 (2026-08-05)
+- 鼠标框选：列表/大图标视图空白区按住左键拖拽画框，释放后选中框内文件（矩形相交计算，支持虚拟滚动；Shift/Ctrl 拖拽追加选择；边缘自动滚动；滚动条区域不触发）
+
+### 0.7.0 (2026-08-05)
+- 更改属主改为下拉选择：/etc/passwd UID≥1000 用户 + root + nobody（页面 PHP 只读注入 window.AE_USERS，当前属主默认选中）
+- 操作后自动刷新：runAction 加 8 秒超时兜底（删除/权限/owner 等快任务 nchan done 可能早于订阅发出导致列表不刷新，兜底强制刷新）
+
+### 0.6.9 (2026-08-05)
+- 移除图片缩略图（大图加载卡顿，恢复图标渲染）
+- 修复删除/复制/移动等后台操作间歇性失效：AExplorer.page 补 Nchan="file_manager"（官方 Browse 同款页面属性，触发 unraid 启动 file_manager 消费端；此前任务入队后无人消费）
+- 拖拽上传：保留（webkitGetAsEntry 文件夹递归 + mkdir 子目录重建）
+
+### 0.6.8 (2026-08-05)
+- 修复拖拽上传：webkitGetAsEntry 对非真实拖拽返回 null 导致 entries 含 null 崩溃且不走文件 fallback，过滤 null 后降级文件上传正常
+
+### 0.6.7 (2026-08-05)
+- 图片缩略图：列表/大图标视图图片文件渲染缩略图（虚拟滚动天然懒加载 + loading="lazy"，加载失败降级灰显；纯前端零后端）
+- 右键解压：zip / tar.gz / tgz / tar 解压到当前目录（Browse.php mode=extract，unzip/tar 绝对路径 + validdir 白名单 + escapeshellarg）
+- 拖拽上传增强：支持文件夹拖拽（webkitGetAsEntry 递归遍历，Chrome/Edge；Firefox 降级文件拖拽）；子目录自动递归创建（mode=mkdir，过滤 .. 防穿越）；队列串行上传
+- 上传队列支持相对路径子目录重建
+
+### 0.6.6 (2026-08-05)
+- 撤回文件夹打包下载功能（0.6.4/0.6.5）：php-fpm 环境 body 解析异常导致该功能不可用，多次重构未能解决，按用户要求整体撤回
+- Browse.php 移除 ex_size_json/ex_pack_json，恢复仅 list_json/tree_json/search；下载恢复单文件直链 + 目录提示
+- 清除 ae-download-tmp 临时目录相关代码（安装/卸载/清理三层）
+
+### 0.6.5 (2026-08-05)
+- 打包下载重构（v2）：放弃 passthru 流式（PHP-FPM 下 exit 码/缓冲不可靠，曾致 204 空响应），改为 临时文件 + readfile
+- 流程：du 检查 &lt;1GiB → tar 到 cache/appdata 临时目录（不占 RAM）→ Content-Length 正确 → readfile 流式输出
+- 清理三层：readfile 后 unlink / register_shutdown_function 兜底 / 每次请求前清扫 &gt;1h 残留（防强杀重启遗留）
+- 临时目录优先 /mnt/cache/appdata/ae-download-tmp，无 cache 则 appdata share；卸载时清理
+- 前端不变：确认弹窗 → 表单提交下载
+
+### 0.6.4 (2026-08-05)
+- 文件夹打包下载：选中单个文件夹 → 查询大小（du）→ 确认弹窗 → tar.gz 纯流式打包（GNU tar stdout 直通浏览器，零临时文件/零内存累积）
+- 限制 &lt; 1 GiB（防超大目录拖垮 IO/PHP），超限提示改用复制/挂载
+- 单文件直链下载保持不变；多选提示逐个下载
+- 安全：ex_validdir 白名单 + du/tar 全 escapeshellarg + CSRF（表单带 csrf_token，unraid hash_equals 校验）
+
+### 0.6.3 (2026-08-05)
+- 文档全面更新：README / docs/DESIGN / 插件 README（显示名描述）对齐 0.6.2 全功能（顶部 tab、媒体打开、侧键、星标、递归搜索、属性、编码切换等），清除过期内容
+
+### 0.6.2 (2026-08-05)
+- 侧键导航改为全局拦截：去掉 #explorer-app 作用域限制（鼠标在 unraid 框架区域按侧键也会触发浏览器后退）；AExplorer 为独立页面，JS 仅存在于本页，不影响其他页面
+- 图片查看器支持上一张/下一张翻页（当前目录/搜索结果内全部图片，含计数与文件名）
+- 编辑器支持查看编码切换：UTF-8 / GBK / GB18030 / Big5 / ISO-8859-1（按字节解码 TextDecoder，保存转 UTF-8 前确认）
+
+### 0.6.1 (2026-08-05)
+- 修复侧键同时触发浏览器后退：auxclick 的 preventDefault 无法阻止侧键历史导航（浏览器在 mousedown 阶段已决定），改为 mousedown + preventDefault
+
+### 0.6.0 (2026-08-05)
+- 鼠标侧键导航：button 3/4（后退键/前进键）→ 上/下一目录，preventDefault 压过浏览器历史导航
+- 双击智能打开：图片/视频/音频弹窗预览（图片浏览器原生、视频 mp4/webm、音频 mp3/flac 等）；文本进编辑器；未知类型提示"无法预览+可下载"，不再静默下载
+- 搜索结果右键"打开所在目录"：跳转到匹配项的父目录（修复搜索模式选中/操作失效：selectedItems 搜索模式改从 state.sorted 取）
+- 星标收藏：右键"添加星标"，侧边栏 ⭐ 星标区展示（localStorage 持久化，右键可移除）
+- 后端递归搜索：Browse.php 新增 mode=search（深度 3、限 400 目录、忽略隐藏目录、白名单路径），解决深层文件搜不到
+- "计算占用空间"改为"属性"：名称/路径/类型/大小/时间/权限/属主/位置 + 目录占用空间（复用官方 calc）
+
+### 0.5.2 (2026-08-05)
+- 修复 F2 重命名无效：handleKeydown 未绑定 F2 分支，补上 doRename()
+
+### 0.5.1 (2026-08-05)
+- 搜索下钻一层子目录（限前 20 个），结果标注来源子目录
+- 快捷访问区上移到侧边栏顶部（不再置底）
+
+### 0.5.0 (2026-08-05)
+- 树展开真正改为垂直布局：.ex-tree-node flex-wrap + .ex-tree-children flex-basis:100%，子节点换行到父节点下方（此前作为 flex item 显示在父节点右侧 = 往右侧 expand）
+- 折叠 0.4.8/0.4.9 的缩进微调（2px 保留）
+
+### 0.4.9 (2026-08-05)
+- 树展开缩进进一步压至 2px：子节点文本与父节点文本几乎同列，垂直布局（0.4.8 的 6px 基础上微调）
+
+### 0.4.8 (2026-08-05)
+- 修复面包屑点击跳转：闭包捕获共享 acc 导致所有 crumb 都导航到完整路径，改为每级独立绑定
+- 列表大小显示改用前端自动单位（B/KB/MB/GB），不再显示后端千分位无单位
+- 树展开缩进 14px→6px：子节点垂直排列，避免往右侧深缩进挤压文本
+
+### 0.4.7 (2026-08-05)
+- 修复被官方 CSS 覆盖的布局：explorer.css 全部规则加 #explorer-app 前缀（ID 特异性压过官方 reset，弹窗 padding/margin、按钮、输入框恢复）
+- 大图标视图：图标容器自适应宽度 + 固定高度垂直居中；文件名改 display:block 居中 + 2 行截断
+- 侧边栏自适应：存储树区 flex:1 滚动、快捷栏固定底部
+
+### 0.4.6 (2026-08-05)
+- 插件列表样式对齐：icon 由 fa-folder-open 字体图标改为 aexplorer.png 图片图标；README 标题由 h1 改为 h4（与 appdata.backup 等一致）
+
+### 0.4.5 (2026-08-05)
+- 修复插件列表显示名：txz 内 README.md 从官方 dfm 原始文本改为 AExplorer 自身说明（unraid 插件页显示名/描述取自该 README）
+
+### 0.4.4 (2026-08-05)
+- 注册为顶部导航 tab（Menu="Tasks:70"，位于 Docker 与 Apps 之间），不再挂载在 Main 子菜单
+- launch 路径同步改为 /AExplorer
+
+### 0.4.3 (2026-08-05)
+- 修复 list_json/tree_json 空响应：apiPost 补齐 X-CSRF-Token（unraid webGui 强制校验 /plugins/ 下 PHP 请求，缺 token 拒绝并记 syslog）
+- 实测安装验证：未认证访问 302、文件完整、无 PHP fatal
+
+### 0.4.2 (2026-08-05)
+- 样式作用域化：移除 AExplorer.page 全局 body/#content 规则，改为 #explorer-app 限定，不再污染官方 WebGUI 观感
+- ACE 编辑器改用官方内置资源（/webGui/javascript/ace/，1.15.2 同版本），移除自带 9.1M ace 目录，txz 体积大幅减小
+- 修复 0.4.1 release 描述乱码
+
+### 0.4.1 (2026-08-05)
+- 安全加固：dfm.js doAction / editor.js 读写请求补齐 X-CSRF-Token（与官方 upload 协议对齐，纵深防御）
+- 下载交互：单文件直链与官方一致；多选/目录下载给出明确提示
+- 清理过期死代码（smoke_test.php / verify.py 引用已删除的 fs.php）
+
+### 0.4.0 (2026-08-05)
+- 规范修复：txz 属主 root:root、权限 755/644、CRLF→LF、SHA256 校验注入
+- PLG 增加 min=7.0.0（依赖内置版）、icon 属性
+- txz 发布路径修正：releases/download（此前 source/ 404）
+- Renamed to AExplorer (independent page, no conflict with system Browse)
+- Based on Unraid 7 built-in Dynamix File Manager (webGui kernel)
+- UI rewritten: Windows 11 Explorer style (sidebar tree, breadcrumbs, virtual scroll)
+- Reuses system Control.php protocol (mode:file JSON + task queue)
+- CSRF token injection, ex_ prefixed functions, no nchan script conflict
+</CHANGES>
+
+<FILE Run="/bin/bash">
+<INLINE>
+rm -f $(ls /boot/config/plugins/&name;/&name;*.txz 2>/dev/null|grep -v '&version;')
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/&name;/&file;" Run="upgradepkg --install-new">
+<URL>&releaseURL;/&file;</URL>
+<SHA256>718f24b500907948bfa5e636ef24d9c0de0db2a9232519153d5e9115f1b1e2f6</SHA256>
+</FILE>
+
+<FILE Run="/bin/bash">
+<INLINE>
+echo ""
+echo "----------------------------------------------------"
+echo " &name; has been installed."
+echo " Version: &version;"
+echo ""
+echo " Find it under Main -> AExplorer"
+echo "----------------------------------------------------"
+echo ""
+</INLINE>
+</FILE>
+
+<FILE Run="/bin/bash" Method="remove">
+<INLINE>
+removepkg &name;-&version;
+rm -r /usr/local/emhttp/plugins/&name;
+rm -r /boot/config/plugins/&name;
+</INLINE>
+</FILE>
+
+</PLUGIN>
